@@ -1,11 +1,25 @@
 use std::net::TcpStream;
 use std::io::{Write, Read};
 
-pub struct tcp {}
+use crate::errors;
+use crate::errors::G_ERROR;
 
-impl tcp {
-   pub fn go_to(host: &str, port: u16, path: &str) -> Result<String, ()> {
-      let url = format!("{}:{}", host, port);
+pub struct Request {}
+
+impl Request {
+   pub fn go_to(host: &str, port: u16, path: &str) -> Result<String, errors::Handler> {
+      let split_host: Vec<&str> = host.split("//").collect();
+
+      if !split_host.get(0).unwrap().contains(&"gopher:") {
+         return Err(errors::Handler::throw(G_ERROR::NOT_GOPHER));
+      }
+
+      let url = format!("{}:{}",
+                        split_host
+                            .get(1)
+                            .unwrap(),
+                        port
+      );
       let stream = TcpStream::connect(&url);
       match stream {
          Ok(mut res) => {
@@ -19,8 +33,7 @@ impl tcp {
             Ok(String::from_utf8_lossy(&data).to_string())
          },
          Err(e) => {
-            println!("{}", e);
-            Err(())
+            Err(errors::Handler::throw(G_ERROR::OTHER).custom_error("Not a gopher hole".to_string()))
          }
       }
    }

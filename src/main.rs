@@ -1,8 +1,13 @@
+use crate::errors::Handler;
+
 mod tcp;
+mod gopher;
+mod errors;
 
 
 fn main() {
-    let get_gopher = tcp::tcp::go_to("gopher.floodgap.com", 70, "/").unwrap();
+    let get_gopher = tcp::Request::go_to("gopher://gopher.floodgap.com", 70, "/").unwrap();
 
-    println!("{}", get_gopher);
+    let parser = gopher::Parser::new(&get_gopher);
+    println!("{:#?}", parser);
 }
